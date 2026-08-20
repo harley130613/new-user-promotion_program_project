@@ -1,0 +1,159 @@
+import json
+
+OUT = "/home/claude/promotion_program_project/output"
+with open(f"{OUT}/summary.json", encoding="utf-8") as f:
+    DATA = json.load(f)
+
+data_json = json.dumps(DATA, ensure_ascii=False)
+
+HTML = """<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BUTL — New-Customer Promotion Program (Before/After Redesign)</title>
+<style>
+  :root {
+    --surface-1:  #fcfcfb; --page: #f9f9f7; --text-1: #0b0b0b; --text-2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text-1); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 60px; }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-2); font-size: 13px; margin: 0 0 10px; line-height: 1.5; }
+  .subtitle b { color: var(--text-1); }
+  .banner { background: #fff8e6; border: 1px solid #ecd394; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #6b5416; margin-bottom: 22px; line-height: 1.5; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .kpi-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-sub { font-size: 11.5px; color: var(--text-2); margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .panel h2 { font-size: 14px; margin: 0 0 2px; }
+  .panel .desc { font-size: 12px; color: var(--text-2); margin: 0 0 14px; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .bar-label { font-size: 11px; fill: var(--text-2); font-variant-numeric: tabular-nums; }
+  .cat-label { font-size: 11.5px; fill: var(--text-1); }
+  .insight { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: var(--text-2); }
+  .insight b { color: var(--text-1); }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 20px; margin-left: 6px; }
+  .tag.good { background: #e5f6e5; color: #0a6b0a; }
+  .tag.bad { background: #fbe7e6; color: #a12b2b; }
+  footer { color: var(--muted); font-size: 11.5px; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <h1>New-Customer Promotion Program — Trước / Sau Thiết Kế Lại</h1>
+  <p class="subtitle"><b>Dữ liệu THẬT</b> từ báo cáo nội bộ BUTL "Phân tích hiệu quả Promotion New User 100K" (06/2025–12/2025) và chương trình thiết kế lại (07/2026–hiện tại).</p>
+  <div class="banner">
+    Đây là số liệu <b>tổng hợp cấp chương trình</b> lấy từ báo cáo nội bộ — không phải dữ liệu dòng lệnh
+    (row-level) thô. Không có số VNĐ tuyệt đối trong phạm vi này (ROI/Activation/Retention đều là tỷ lệ %) nên
+    không cần bước ẩn danh hóa.
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Funnel chương trình cũ: Chuyến 1 → 2 → 3</h2>
+      <p class="desc">30.680 user (06–12/2025) — drop-off lớn nhất ngay ở bước 1→2</p>
+      <div class="chart-wrap" id="funnelChart"></div>
+    </div>
+    <div class="panel">
+      <h2>So sánh thiết kế voucher</h2>
+      <p class="desc">Thay đổi cốt lõi: từ 1 voucher không hạn dùng → chuỗi 5 chuyến có hạn giảm dần</p>
+      <div id="designCompare" style="font-size:13px; line-height:1.9; color:var(--text-2);"></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insightBox"></div>
+
+  <footer>Phân tích chương trình khuyến mãi khách hàng mới, dữ liệu thật BUTL &middot; Trần Thị Cẩm Loan — Marketing Data Analyst</footer>
+
+<script>
+const DATA = __DATA_JSON__;
+const fmtN = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
+const fmtPct = n => n.toFixed(2) + '%';
+
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function hBarChart(containerId, { labels, values, colors, valueFmt }) {
+  const container = document.getElementById(containerId);
+  const W = container.clientWidth || 460, rowH = 34, gap = 12;
+  const H = labels.length * (rowH + gap) + 10;
+  const leftPad = 130, rightPad = 60;
+  const maxV = Math.max(...values) * 1.15 || 1;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
+  for (let i = 0; i <= 4; i++) {
+    const x = leftPad + (i / 4) * (W - leftPad - rightPad);
+    svg.appendChild(el('line', { x1: x, x2: x, y1: 4, y2: H - 4, stroke: '#e1e0d9', 'stroke-width': 1 }));
+  }
+  labels.forEach((lab, i) => {
+    const y = i * (rowH + gap) + 6;
+    const barW = (values[i] / maxV) * (W - leftPad - rightPad);
+    const catText = el('text', { x: leftPad - 10, y: y + rowH / 2 + 4, 'text-anchor': 'end', class: 'cat-label' });
+    catText.textContent = lab;
+    svg.appendChild(catText);
+    svg.appendChild(el('rect', { x: leftPad, y, width: Math.max(barW, 2), height: rowH, rx: 4, fill: colors[i] }));
+    const valText = el('text', { x: leftPad + barW + 8, y: y + rowH / 2 + 4, class: 'bar-label' });
+    valText.textContent = valueFmt(values[i]);
+    svg.appendChild(valText);
+  });
+  container.innerHTML = '';
+  container.appendChild(svg);
+}
+
+// ---------- KPI cards ----------
+document.getElementById('kpiRow').innerHTML = [
+  { label: 'Chương trình cũ', value: fmtN(DATA.old_program.users), sub: `user, ROI ${DATA.old_program.roi_pct}%` },
+  { label: 'Quay lại chuyến 2 (cũ)', value: fmtPct(DATA.old_program.return_trip2_rate_pct), sub: 'trên tổng user chương trình cũ' },
+  { label: 'Chương trình mới', value: fmtN(DATA.new_program.users), sub: `user mới, Activation ${DATA.new_program.activation_rate_pct}%` },
+  { label: 'Retention R30 (mới)', value: fmtPct(DATA.new_program.retention_r30_pct), sub: `+${DATA.new_program.improvement_vs_baseline_pct_points}đpt so baseline` },
+].map(k => `
+  <div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-sub">${k.sub}</div>
+  </div>`).join('');
+
+// ---------- Funnel ----------
+hBarChart('funnelChart', {
+  labels: DATA.old_funnel.map(f => f.step),
+  values: DATA.old_funnel.map(f => f.rate_pct),
+  colors: ['#2a78d6', '#eb6834', '#d03b3b'],
+  valueFmt: v => fmtPct(v),
+});
+
+// ---------- Design compare ----------
+document.getElementById('designCompare').innerHTML = `
+  <b>Chương trình cũ:</b> ${DATA.old_program.voucher_design}<br>
+  <b>Chương trình mới:</b> ${DATA.new_program.voucher_design}<br>
+  <b>Triển khai:</b> ${DATA.new_program.rollout}
+`;
+
+// ---------- Insight ----------
+document.getElementById('insightBox').innerHTML = `
+  <b>Insight chính:</b> Ở chương trình cũ, <b>${fmtPct(DATA.old_funnel_dropoff.trip1_to_trip2_pct_points)}</b>
+  điểm phần trăm user "rơi rụng" ngay giữa chuyến 1 và chuyến 2 <span class="tag bad">DROP-OFF LỚN NHẤT</span> —
+  trùng khớp với việc voucher cũ không có hạn sử dụng nên thiếu động lực thúc đẩy quay lại sớm.<br><br>
+  Chương trình thiết kế lại (voucher chuỗi 5 chuyến, hạn dùng giảm dần + nhắc tự động) đạt Activation Rate
+  <b>${fmtPct(DATA.new_program.activation_rate_pct)}</b> và Retention R30 <b>${fmtPct(DATA.new_program.retention_r30_pct)}</b>
+  — cải thiện <b>+${DATA.new_program.improvement_vs_baseline_pct_points}đpt</b> so với baseline
+  <span class="tag good">CẢI THIỆN</span>, đo lường liên tục qua dashboard cohort trong quá trình mở rộng dần quy mô.
+`;
+</script>
+</body>
+</html>
+"""
+
+HTML = HTML.replace("__DATA_JSON__", data_json)
+out_path = f"{OUT}/dashboard.html"
+with open(out_path, "w", encoding="utf-8") as f:
+    f.write(HTML)
+print("written", out_path, len(HTML), "bytes")

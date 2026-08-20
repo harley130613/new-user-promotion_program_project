@@ -1,0 +1,45 @@
+{
+  "old_program": {
+    "name": "Promotion New User 100K (chương trình cũ)",
+    "period": "2025-06-01 to 2025-12-31",
+    "users": 30680,
+    "return_trip2_rate_pct": 20.45,
+    "return_trip3_rate_pct": 7.43,
+    "roi_pct": 7.14,
+    "voucher_design": "1 voucher, không giới hạn thời hạn sử dụng"
+  },
+  "context_2025": {
+    "single_trip_month_share_pct": 73.0,
+    "retention_mom_start_pct": 56.0,
+    "retention_mom_end_pct": 42.0
+  },
+  "old_funnel": [
+    {
+      "step": "Chuyến 1 (mọi user mới)",
+      "rate_pct": 100.0
+    },
+    {
+      "step": "Chuyến 2",
+      "rate_pct": 20.45
+    },
+    {
+      "step": "Chuyến 3",
+      "rate_pct": 7.43
+    }
+  ],
+  "old_funnel_dropoff": {
+    "trip1_to_trip2_pct_points": 79.55,
+    "trip2_to_trip3_pct_points": 13.02
+  },
+  "new_program": {
+    "name": "Voucher chuỗi 5 chuyến (chương trình thiết kế lại)",
+    "period": "2026-07-01 to present",
+    "users": 35541,
+    "activation_rate_pct": 24.0,
+    "retention_r30_pct": 15.5,
+    "improvement_vs_baseline_pct_points": 8.4,
+    "voucher_design": "chuỗi 5 chuyến, giá trị & hạn dùng giảm dần theo mốc + nhắc tự động (ngày 7, 14, trước hạn 3 ngày)",
+    "rollout": "2 giai đoạn: pilot rồi mở rộng dần quy mô, theo dõi qua dashboard cohort"
+  },
+  "note": "old_program/new_program là KPI tổng hợp lấy từ báo cáo nội bộ BUTL (không phải dữ liệu dòng lệnh thô); old_funnel_dropoff là chỉ số PHÁI SINH tính từ các KPI đó, công thức nêu rõ trong script này."
+}
